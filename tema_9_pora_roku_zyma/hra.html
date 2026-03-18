@@ -190,6 +190,25 @@
       border: 6px solid var(--good);
     }
 
+    #btnFullscreen {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 1000;
+      background: #2c3e50;
+      color: white;
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      font-size: 1.3rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
     @media (max-width: 1100px) {
       .main-container { flex-direction: column-reverse; align-items: center; }
       .images-side { grid-template-columns: repeat(3, 1fr); width: 100%; position: static; }
@@ -201,6 +220,8 @@
 </head>
 
 <body>
+  <button id="btnFullscreen" onclick="toggleFullscreen()" title="На весь екран">⛶</button>
+
   <h1>Встав пропущені слова</h1>
 
   <button id="btnTopRestart" onclick="location.reload()">Зіграти ще раз</button>
@@ -336,6 +357,27 @@
     player.src = file;
     player.play().catch(() => {});
   }
+
+  function toggleFullscreen() {
+    const btn = document.getElementById('btnFullscreen');
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+      btn.textContent = '✕';
+      btn.title = 'Вийти з повного екрану';
+    } else {
+      document.exitFullscreen();
+      btn.textContent = '⛶';
+      btn.title = 'На весь екран';
+    }
+  }
+
+  document.addEventListener('fullscreenchange', () => {
+    const btn = document.getElementById('btnFullscreen');
+    if (!document.fullscreenElement) {
+      btn.textContent = '⛶';
+      btn.title = 'На весь екран';
+    }
+  });
 
   function checkWin() {
     if (correctCount === ids.length) {

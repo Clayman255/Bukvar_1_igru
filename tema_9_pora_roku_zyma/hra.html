@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Встав пропущені слова</title>
+
+  <style>
+    :root{
+      --bg: #f0f4f8;
+      --card-bg: #ffffff;
+      --accent: #ffd84d;
+      --text: #000000;
+      --good: #22c55e;
+      --bad: #ef4444;
+      --shadow: rgba(0,0,0,0.1);
+      --muted: #94a3b8;
+      --blue-accent: #e0f2fe;
+    }
+
+    body{
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1{
+      margin: 0 0 15px;
+      font-size: 2.2rem;
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    #btnTopRestart {
+      display: none;
+      margin-bottom: 20px;
+      background: var(--good);
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1.5rem;
+      box-shadow: 0 4px 10px var(--shadow);
+    }
+
+    .task{
+      background: var(--card-bg);
+      padding: 15px 25px;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center; /* ЦЕНТРУВАННЯ ЗАВДАННЯ */
+      gap: 20px;
+      margin-bottom: 25px;
+      font-size: 1.3rem;
+      font-weight: bold;
+      max-width: 1300px;
+      width: 100%;
+    }
+
+    .main-container {
+      display: flex;
+      gap: 30px;
+      max-width: 1350px;
+      width: 100%;
+      align-items: flex-start;
+    }
+
+    .sentences-side {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .images-side {
+      flex: 0 0 460px;
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 4px 12px var(--shadow);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      justify-items: center; /* Центрування кожної картинки в комірці */
+      position: sticky;
+      top: 20px;
+    }
+
+    /* ФІКС: 5-та картинка в блоці вибору завжди посередині */
+    .images-side .drag-item:nth-child(5) {
+      grid-column: span 2;
+    }
+
+    .rowCard {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 15px 25px;
+      box-shadow: 0 4px 12px var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 2.1rem;
+      font-weight: bold;
+      color: #000;
+    }
+
+    .drop-zone {
+      width: 180px;
+      height: 180px;
+      border: 4px dashed var(--muted);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fafafa;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .drop-zone.hover {
+      background: var(--blue-accent);
+      border-color: #0284c7;
+    }
+
+    .drop-zone.correct {
+      border: 4px solid var(--good);
+      background: #f0fdf4;
+    }
+
+    .snd {
+      background: var(--accent);
+      border: none;
+      width: 55px; height: 55px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 8px var(--shadow);
+    }
+
+    .rowCard .snd {
+      margin-left: auto;
+    }
+
+    .drag-item {
+      width: 180px;
+      height: 180px;
+      cursor: grab;
+      border-radius: 15px;
+      border: 2px solid #e2e8f0;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      touch-action: none;
+    }
+
+    .drag-item img {
+      max-width: 100%;
+      max-height: 100%;
+      pointer-events: none;
+    }
+
+    #winMsg {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.98);
+      padding: 40px 80px;
+      border-radius: 30px;
+      box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+      z-index: 2000;
+      text-align: center;
+      border: 6px solid var(--good);
+    }
+
+    @media (max-width: 1100px) {
+      .main-container { flex-direction: column-reverse; align-items: center; }
+      .images-side { grid-template-columns: repeat(3, 1fr); width: 100%; position: static; }
+      .images-side .drag-item:nth-child(5) { grid-column: auto; }
+      .rowCard { font-size: 1.4rem; }
+      .drop-zone, .drag-item { width: 140px; height: 140px; }
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Встав пропущені слова</h1>
+
+  <button id="btnTopRestart" onclick="location.reload()">Зіграти ще раз</button>
+
+  <div class="task">
+    <button class="snd" onclick="playSnd('zav.mp3')">🔊</button>
+    <span>Встав у речення необхідні слова у вигляді картинок.</span>
+  </div>
+
+  <div class="main-container">
+    <div class="sentences-side" id="sentences">
+      <div class="rowCard">
+        <div class="drop-zone" data-correct="1"></div>
+        <span>тихо падають на землю.</span>
+        <button class="snd" onclick="playSnd('1.mp3')">🔊</button>
+      </div>
+      <div class="rowCard">
+        <div class="drop-zone" data-correct="2"></div>
+        <span>стоїть серед двору.</span>
+        <button class="snd" onclick="playSnd('2.mp3')">🔊</button>
+      </div>
+      <div class="rowCard">
+        <div class="drop-zone" data-correct="3"></div>
+        <span>швидко мчать з гірки.</span>
+        <button class="snd" onclick="playSnd('3.mp3')">🔊</button>
+      </div>
+      <div class="rowCard">
+        <div class="drop-zone" data-correct="4"></div>
+        <span>зігрівають руки.</span>
+        <button class="snd" onclick="playSnd('4.mp3')">🔊</button>
+      </div>
+      <div class="rowCard">
+        <div class="drop-zone" data-correct="5"></div>
+        <span>сяє яскравими вогниками.</span>
+        <button class="snd" onclick="playSnd('5.mp3')">🔊</button>
+      </div>
+    </div>
+
+    <div class="images-side" id="pool"></div>
+  </div>
+
+  <div id="winMsg">
+    <div style="font-size: 5rem;">❄️</div>
+    <div style="font-size: 3rem; font-weight: bold; color: var(--good);">Все правильно!</div>
+  </div>
+
+  <audio id="audioPlayer"></audio>
+  <audio id="pop" src="https://actions.google.com/sounds/v1/cartoon/pop.ogg"></audio>
+
+<script>
+  const ids = [1, 2, 3, 4, 5];
+  const pool = document.getElementById('pool');
+  const winMsg = document.getElementById('winMsg');
+  const btnRestart = document.getElementById('btnTopRestart');
+  let correctCount = 0;
+
+  // Створюємо картинки БЕЗ перемішування, щоб п'ята завжди була п'ятою в коді
+  // Але візуально для дитини вони будуть у два стовпці + одна знизу.
+  ids.forEach(id => {
+    const item = document.createElement('div');
+    item.className = 'drag-item';
+    item.draggable = true;
+    item.dataset.id = id;
+    item.id = `img-${id}`;
+    
+    const img = document.createElement('img');
+    img.src = `${id}.png`;
+    
+    item.appendChild(img);
+    pool.appendChild(item);
+
+    item.addEventListener('dragstart', dragStart);
+  });
+
+  const zones = document.querySelectorAll('.drop-zone');
+  zones.forEach(zone => {
+    zone.addEventListener('dragover', dragOver);
+    zone.addEventListener('dragleave', dragLeave);
+    zone.addEventListener('drop', drop);
+  });
+
+  function dragStart(e) {
+    e.dataTransfer.setData('text/plain', e.target.id);
+    e.target.classList.add('dragging');
+  }
+
+  function dragOver(e) {
+    e.preventDefault();
+    if (!e.currentTarget.classList.contains('correct')) {
+      e.currentTarget.classList.add('hover');
+    }
+  }
+
+  function dragLeave(e) {
+    e.currentTarget.classList.remove('hover');
+  }
+
+  function drop(e) {
+    e.preventDefault();
+    const zone = e.currentTarget;
+    zone.classList.remove('hover');
+    
+    const id = e.dataTransfer.getData('text/plain');
+    const draggableElement = document.getElementById(id);
+    if(!draggableElement) return;
+
+    const imgId = draggableElement.dataset.id;
+    const correctId = zone.dataset.correct;
+
+    if (imgId === correctId) {
+      zone.classList.add('correct');
+      zone.appendChild(draggableElement);
+      draggableElement.draggable = false;
+      draggableElement.classList.remove('dragging');
+      draggableElement.style.cursor = 'default';
+      draggableElement.style.boxShadow = 'none';
+      draggableElement.style.border = 'none';
+      draggableElement.style.width = '100%';
+      draggableElement.style.height = '100%';
+      // Прибираємо спец-позиціонування, якщо картинка вже в реченні
+      draggableElement.style.gridColumn = 'auto'; 
+      
+      document.getElementById('pop').play();
+      correctCount++;
+      checkWin();
+    } else {
+      draggableElement.classList.remove('dragging');
+    }
+  }
+
+  function playSnd(file) {
+    const player = document.getElementById('audioPlayer');
+    player.src = file;
+    player.play().catch(() => {});
+  }
+
+  function checkWin() {
+    if (correctCount === ids.length) {
+      winMsg.style.display = 'block';
+      btnRestart.style.display = 'block';
+      
+      setTimeout(() => {
+        winMsg.style.opacity = '0';
+        winMsg.style.transition = 'opacity 1s';
+        setTimeout(() => { winMsg.style.display = 'none'; }, 1000);
+      }, 5000);
+    }
+  }
+</script>
+</body>
+</html>
